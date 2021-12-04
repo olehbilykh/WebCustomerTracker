@@ -8,10 +8,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
@@ -25,6 +22,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 @Configuration
+@EnableAspectJAutoProxy
 @EnableWebMvc
 @EnableTransactionManagement
 @ComponentScan("com.luv2code.springdemo")
@@ -32,7 +30,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 public class DemoAppConfig implements WebMvcConfigurer {
 
 	@Autowired
-	private Environment env;
+	private Environment environment;
 	
 	private Logger logger = Logger.getLogger(getClass().getName());
 	
@@ -57,20 +55,20 @@ public class DemoAppConfig implements WebMvcConfigurer {
 
 		// set the jdbc driver
 		try {
-			myDataSource.setDriverClass("com.mysql.jdbc.Driver");		
+			myDataSource.setDriverClass(environment.getProperty("jdbc.driver"));
 		}
 		catch (PropertyVetoException exc) {
 			throw new RuntimeException(exc);
 		}
 		
 		// for sanity's sake, let's log url and user ... just to make sure we are reading the data
-		logger.info("jdbc.url=" + env.getProperty("jdbc.url"));
-		logger.info("jdbc.user=" + env.getProperty("jdbc.user"));
+		logger.info("jdbc.url=" + environment.getProperty("jdbc.url"));
+		logger.info("jdbc.user=" + environment.getProperty("jdbc.user"));
 		
 		// set database connection props
-		myDataSource.setJdbcUrl(env.getProperty("jdbc.url"));
-		myDataSource.setUser(env.getProperty("jdbc.user"));
-		myDataSource.setPassword(env.getProperty("jdbc.password"));
+		myDataSource.setJdbcUrl(environment.getProperty("jdbc.url"));
+		myDataSource.setUser(environment.getProperty("jdbc.user"));
+		myDataSource.setPassword(environment.getProperty("jdbc.password"));
 		
 		// set connection pool props
 		myDataSource.setInitialPoolSize(getIntProperty("connection.pool.initialPoolSize"));
@@ -86,8 +84,8 @@ public class DemoAppConfig implements WebMvcConfigurer {
 		// set hibernate properties
 		Properties props = new Properties();
 
-		props.setProperty("hibernate.dialect", env.getProperty("hibernate.dialect"));
-		props.setProperty("hibernate.show_sql", env.getProperty("hibernate.show_sql"));
+		props.setProperty("hibernate.dialect", environment.getProperty("hibernate.dialect"));
+		props.setProperty("hibernate.show_sql", environment.getProperty("hibernate.show_sql"));
 		
 		return props;				
 	}
@@ -104,7 +102,7 @@ public class DemoAppConfig implements WebMvcConfigurer {
 		// set the jdbc driver class
 		
 		try {
-			securityDataSource.setDriverClass(env.getProperty("security.jdbc.driver"));
+			securityDataSource.setDriverClass(environment.getProperty("security.jdbc.driver"));
 		} catch (PropertyVetoException exc) {
 			throw new RuntimeException(exc);
 		}
@@ -113,15 +111,15 @@ public class DemoAppConfig implements WebMvcConfigurer {
 		// for sanity's sake, log this info
 		// just to make sure we are REALLY reading data from properties file
 		
-		logger.info(">>> security.jdbc.url=" + env.getProperty("security.jdbc.url"));
-		logger.info(">>> security.jdbc.user=" + env.getProperty("security.jdbc.user"));
+		logger.info(">>> security.jdbc.url=" + environment.getProperty("security.jdbc.url"));
+		logger.info(">>> security.jdbc.user=" + environment.getProperty("security.jdbc.user"));
 		
 		
 		// set database connection props
 		
-		securityDataSource.setJdbcUrl(env.getProperty("security.jdbc.url"));
-		securityDataSource.setUser(env.getProperty("security.jdbc.user"));
-		securityDataSource.setPassword(env.getProperty("security.jdbc.password"));
+		securityDataSource.setJdbcUrl(environment.getProperty("security.jdbc.url"));
+		securityDataSource.setUser(environment.getProperty("security.jdbc.user"));
+		securityDataSource.setPassword(environment.getProperty("security.jdbc.password"));
 		
 		// set connection pool props
 		
@@ -145,7 +143,7 @@ public class DemoAppConfig implements WebMvcConfigurer {
 	
 	private int getIntProperty(String propName) {
 		
-		String propVal = env.getProperty(propName);
+		String propVal = environment.getProperty(propName);
 		
 		// now convert to int
 		int intPropVal = Integer.parseInt(propVal);
@@ -161,7 +159,7 @@ public class DemoAppConfig implements WebMvcConfigurer {
 		
 		// set the properties
 		sessionFactory.setDataSource(myDataSource());
-		sessionFactory.setPackagesToScan(env.getProperty("hibernate.packagesToScan"));
+		sessionFactory.setPackagesToScan(environment.getProperty("hibernate.packagesToScan"));
 		sessionFactory.setHibernateProperties(getHibernateProperties());
 		
 		return sessionFactory;
