@@ -1,8 +1,14 @@
 package com.luv2code.springdemo.user;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@NoArgsConstructor
+@Getter @Setter
 public class CrmUser {
 
 	@NotNull(message="is required")
@@ -12,26 +18,4 @@ public class CrmUser {
 	@NotNull(message="is required")
 	@Size(min=1, message="is required")
 	private String password;
-	
-	public CrmUser() {
-		
-	}
-
-	public String getUserName() {
-		return userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	
-	
 }
