@@ -1,6 +1,8 @@
 package com.luv2code.springdemo.controller;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.validation.Valid;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +25,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import javax.annotation.PostConstruct;
 import com.luv2code.springdemo.user.CrmUser;
 
 @Controller
@@ -35,7 +38,18 @@ public class RegistrationController {
 	private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 	
 	private Logger logger = Logger.getLogger(getClass().getName());
-	
+
+	private Map<String, String> roles;
+
+	@PostConstruct
+	protected void loadRoles(){
+		roles = new LinkedHashMap<>();
+
+		roles.put("ROLE_EMPLOYEE","Employee");
+		roles.put("ROLE_MANAGER","Manager");
+		roles.put("ROLE_ADMIN","Admin");
+	}
+
 	@InitBinder
 	public void initBinder(WebDataBinder dataBinder) {
 		
@@ -46,9 +60,10 @@ public class RegistrationController {
 	
 	@GetMapping("/showRegistrationForm")
 	public String showMyLoginPage(Model theModel) {
-		
+
 		theModel.addAttribute("crmUser", new CrmUser());
-		
+		theModel.addAttribute("roles", roles);
+
 		return "registration-form";
 		
 	}
@@ -68,6 +83,9 @@ public class RegistrationController {
 
 			theModel.addAttribute("crmUser", new CrmUser());
 			theModel.addAttribute("registrationError", "User name/password can not be empty.");
+
+			// add roles to the model for form display
+			theModel.addAttribute("roles", roles);
 
 			logger.warning("User name/password can not be empty.");
 			
@@ -98,7 +116,14 @@ public class RegistrationController {
         encodedPassword = "{bcrypt}" + encodedPassword;
                  
 		// give user default role of "employee"
-        List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList("ROLE_EMPLOYEE");
+        List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList();
+		authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
+		// if user selected not employee then add that one too
+		String formRole = theCrmUser.getFormRole();
+
+		if(!formRole.equals("ROLE_EMPLOYEE")){
+			authorities.add(new SimpleGrantedAuthority(formRole));
+		}
 
         // create user object (from Spring Security framework)
         User tempUser = new User(userName, encodedPassword, authorities);

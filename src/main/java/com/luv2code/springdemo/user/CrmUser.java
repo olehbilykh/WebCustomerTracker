@@ -18,4 +18,6 @@ public class CrmUser {
 	@NotNull(message="is required")
 	@Size(min=1, message="is required")
 	private String password;
+
+	private String formRole;
 }
